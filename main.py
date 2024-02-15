@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Float
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, FloatField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import DataRequired
 import requests
 
 TMDB_BASE_URL = 'https://api.themoviedb.org/3/search/movie'
@@ -40,8 +40,8 @@ with app.app_context():
     db.create_all()
 
 class EditMovie(FlaskForm):
-    rating = FloatField('Your rating out of 10 e.g 7.5', validators=[DataRequired(), NumberRange(0, 10)])
-    review = StringField('Your review', validators=[DataRequired()], )
+    rating = FloatField('Your rating out of 10 e.g 7.5', validators=[DataRequired()])
+    review = StringField('Your review', validators=[DataRequired()])
     submit = SubmitField('Update')
 
 class AddMovie(FlaskForm):
@@ -59,9 +59,8 @@ def home():
 @app.route('/edit/<int:id>', methods=['POST', 'GET'])
 def edit(id):
     form = EditMovie()
-    if form.validate_on_submit():
-        with app.app_context():
-            movie_to_update = db.get_or_404(Movie, id)
+    movie_to_update = db.get_or_404(Movie, id)
+    if form.validate_on_submit():           
             movie_to_update.rating = float(form.rating.data)
             movie_to_update.review = form.review.data
             db.session.commit()
