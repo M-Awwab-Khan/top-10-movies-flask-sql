@@ -8,11 +8,9 @@ from wtforms import StringField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange
 import requests
 
-TMDB_API_KEY = '75436095b061f4b6230696f70d536197'
-headers = {
-    'Authorization': f"Bearer {TMDB_API_KEY}",
-    'accept': 'application/json'
-}
+TMDB_BASE_URL = 'https://api.themoviedb.org/3/search/movie'
+TMDB_AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3NTQzNjA5NWIwNjFmNGI2MjMwNjk2ZjcwZDUzNjE5NyIsInN1YiI6IjY0M2JlNmIxOGVjNGFiMDRlZWFlZTYxNCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.ZKpwarjv4C5n_WvHadA0OWGNTFsT7gQMDjx4Lgt64IA'
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///Movies.db"
@@ -47,6 +45,7 @@ class EditMovie(FlaskForm):
 
 class AddMovie(FlaskForm):
     title = StringField('Movie Title', validators=[DataRequired()])
+    submit = SubmitField('Search')
 
 
 @app.route("/")
@@ -77,9 +76,20 @@ def delete(id):
         db.session.commit()
         return redirect('/')
 
-@app.route('/add')
+@app.route('/add', methods=['POST', 'GET'])
 def add():
     form = AddMovie()
+    if form.validate_on_submit():
+        headers = {
+            "accept": "application/json",
+            "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3NTQzNjA5NWIwNjFmNGI2MjMwNjk2ZjcwZDUzNjE5NyIsInN1YiI6IjY0M2JlNmIxOGVjNGFiMDRlZWFlZTYxNCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.ZKpwarjv4C5n_WvHadA0OWGNTFsT7gQMDjx4Lgt64IA"
+        }
+        params = {
+            'query': form.title.data
+        }
+        response = requests.get(TMDB_BASE_URL, params=params, headers=headers)
+        movies = response.json()['results']
+        return render_template('select.html', movies=movies)
     return render_template('add.html', form=form)
 
 if __name__ == '__main__':
