@@ -28,9 +28,9 @@ class Movie(db.Model):
     title: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String(250), nullable=False)
-    rating: Mapped[float] = mapped_column(Float)
-    ranking: Mapped[int] = mapped_column(Integer)
-    review: Mapped[str] = mapped_column(String(250))
+    rating: Mapped[float] = mapped_column(Float, nullable=True)
+    ranking: Mapped[int] = mapped_column(Integer, nullable=True)
+    review: Mapped[str] = mapped_column(String(250), nullable=True)
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
 
 # CREATE TABLE
@@ -99,13 +99,11 @@ def create(id):
         "accept": "application/json",
         "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3NTQzNjA5NWIwNjFmNGI2MjMwNjk2ZjcwZDUzNjE5NyIsInN1YiI6IjY0M2JlNmIxOGVjNGFiMDRlZWFlZTYxNCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.ZKpwarjv4C5n_WvHadA0OWGNTFsT7gQMDjx4Lgt64IA"
     }
-    params = {
-        'movie_id': id
-    }
-    response = requests.get(TMDB_MORE_INFO, params=params, headers=headers)
+    response = requests.get(f"{TMDB_MORE_INFO}/{id}", headers=headers)
     movie = response.json()
+    print(movie)
     new_movie = Movie(
-        title=movie['original_title'],
+        title=movie['title'],
         year=movie['release_date'].split('-')[0],
         description=movie['overview'],
         img_url=f"https://image.tmdb.org/t/p/w500{movie['poster_path']}",
