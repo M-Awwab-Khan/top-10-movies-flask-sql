@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Float
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, NumberRange
 import requests
 
 app = Flask(__name__)
@@ -35,6 +35,11 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+class EditMovie(FlaskForm):
+    rating = StringField('Cafe name', validators=[DataRequired(), NumberRange(0, 10)])
+    review = StringField('Opening Time e.g. 8AM', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
 
 @app.route("/")
 def home():
@@ -42,6 +47,11 @@ def home():
         result = db.session.execute(db.select(Movie).order_by(Movie.ranking.desc()))
         all_movies = result.scalars()
         return render_template("index.html", movies=all_movies)
+
+@app.route('/edit/<int:id>')
+def edit(id, methods=['POST', 'GET']):
+    form = EditMovie()
+    return render_template('edit.html', form=form)
 
 
 if __name__ == '__main__':
