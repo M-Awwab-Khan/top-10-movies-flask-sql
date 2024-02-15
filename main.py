@@ -52,8 +52,10 @@ class AddMovie(FlaskForm):
 @app.route("/")
 def home():
     with app.app_context():
-        result = db.session.execute(db.select(Movie).order_by(Movie.ranking.desc()))
-        all_movies = result.scalars()
+        result = db.session.execute(db.select(Movie).order_by(Movie.rating.asc()))
+        all_movies = result.scalars().all()
+        for i in range(len(all_movies)):
+            all_movies[i].ranking = len(all_movies) - i
         return render_template("index.html", movies=all_movies)
 
 @app.route('/edit/<int:id>', methods=['POST', 'GET'])
