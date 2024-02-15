@@ -8,6 +8,11 @@ from wtforms import StringField, SubmitField, FloatField
 from wtforms.validators import DataRequired, NumberRange
 import requests
 
+TMDB_API_KEY = '75436095b061f4b6230696f70d536197'
+headers = {
+    'Authorization': f"Bearer {TMDB_API_KEY}",
+    'accept': 'application/json'
+}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///Movies.db"
@@ -40,6 +45,9 @@ class EditMovie(FlaskForm):
     review = StringField('Your review', validators=[DataRequired()], )
     submit = SubmitField('Update')
 
+class AddMovie(FlaskForm):
+    title = StringField('Movie Title', validators=[DataRequired()])
+
 
 @app.route("/")
 def home():
@@ -69,6 +77,10 @@ def delete(id):
         db.session.commit()
         return redirect('/')
 
+@app.route('/add')
+def add():
+    form = AddMovie()
+    return render_template('add.html', form=form)
 
 if __name__ == '__main__':
     app.run(debug=True)
