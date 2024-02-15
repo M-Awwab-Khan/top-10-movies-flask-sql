@@ -9,6 +9,7 @@ from wtforms.validators import DataRequired, NumberRange
 import requests
 
 TMDB_BASE_URL = 'https://api.themoviedb.org/3/search/movie'
+TMDB_MORE_INFO = 'https://api.themoviedb.org/3/movie'
 TMDB_AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3NTQzNjA5NWIwNjFmNGI2MjMwNjk2ZjcwZDUzNjE5NyIsInN1YiI6IjY0M2JlNmIxOGVjNGFiMDRlZWFlZTYxNCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.ZKpwarjv4C5n_WvHadA0OWGNTFsT7gQMDjx4Lgt64IA'
 
 app = Flask(__name__)
@@ -27,9 +28,9 @@ class Movie(db.Model):
     title: Mapped[str] = mapped_column(String(250), unique=True, nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[str] = mapped_column(String(250), nullable=False)
-    rating: Mapped[float] = mapped_column(Float, nullable=False)
-    ranking: Mapped[int] = mapped_column(Integer, nullable=False)
-    review: Mapped[str] = mapped_column(String(250), nullable=False)
+    rating: Mapped[float] = mapped_column(Float)
+    ranking: Mapped[int] = mapped_column(Integer)
+    review: Mapped[str] = mapped_column(String(250))
     img_url: Mapped[str] = mapped_column(String(250), nullable=False)
 
 # CREATE TABLE
@@ -91,6 +92,28 @@ def add():
         movies = response.json()['results']
         return render_template('select.html', movies=movies)
     return render_template('add.html', form=form)
+
+@app.route('/movie/<int:id>')
+def create(id):
+    headers = {
+        "accept": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3NTQzNjA5NWIwNjFmNGI2MjMwNjk2ZjcwZDUzNjE5NyIsInN1YiI6IjY0M2JlNmIxOGVjNGFiMDRlZWFlZTYxNCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.ZKpwarjv4C5n_WvHadA0OWGNTFsT7gQMDjx4Lgt64IA"
+    }
+    params = {
+        'movie_id': id
+    }
+    response = requests.get(TMDB_MORE_INFO, params=params, headers=headers)
+    movie = response.json()
+    new_movie = Movie(
+        title=movie['original_title'],
+        year=movie['release_date'].split('-')[0],
+        description=movie['overview'],
+        img_url=f"https://image.tmdb.org/t/p/w500{movie['poster_path']}",
+    )
+    db.session.add(new_movie)
+    db.session.commit()
+    return redirect(url_for('edit', id=id))
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
